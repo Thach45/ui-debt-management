@@ -1,16 +1,12 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
+
+import { AppSidebar } from '@/app/layouts/AppSidebar'
 
 export function RootLayout() {
   return (
-    <div className="app-root mx-auto flex min-h-svh w-full max-w-[1126px] flex-1 flex-col border-x border-[var(--border)] text-center">
-      <header className="app-header border-b border-[var(--border)] px-4 py-3">
-        <nav className="flex justify-center gap-4 text-sm font-medium">
-          <Link className="text-[var(--text-h)] underline-offset-4 hover:underline" to="/">
-            Trang chủ
-          </Link>
-        </nav>
-      </header>
-      <main className="app-main flex flex-1 flex-col px-4 py-6">
+    <div className="app-shell flex h-[100dvh] overflow-hidden bg-gray-50/50 font-sans text-base leading-normal text-gray-900 antialiased">
+      <AppSidebar />
+      <main className="flex-1 overflow-y-auto pt-16 md:pt-7 md:pb-7">
         <Outlet />
       </main>
     </div>
