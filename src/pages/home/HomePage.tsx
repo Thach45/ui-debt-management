@@ -1,17 +1,42 @@
-import { useQuery } from '@tanstack/react-query'
+import { FileText, Sprout } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export function HomePage() {
-  const { data, isPending } = useQuery({
-    queryKey: ['setup-check'],
-    queryFn: () => Promise.resolve('React Query đã gắn OK'),
-  })
-
   return (
-    <section className="flex flex-1 flex-col items-center justify-center gap-4">
-      <h1 className="text-4xl font-medium tracking-tight text-[var(--text-h)] md:text-5xl">
-        Debt management
-      </h1>
-      <p className="text-[var(--text)]">{isPending ? 'Đang kiểm tra…' : data}</p>
-    </section>
+    <div className="mx-auto max-w-6xl px-5 md:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Tổng quan</h1>
+        <p className="mt-1 text-sm text-gray-500">Thống kê và quản lý bán trả góp nông sản</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link
+          className="group flex items-start gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+          to="/contracts"
+        >
+          <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
+            <FileText className="size-6" aria-hidden />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700">
+              Hợp đồng vay
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Xem danh sách, lọc theo trạng thái, tạo hợp đồng mới.
+            </p>
+          </div>
+        </Link>
+
+        <div className="flex items-start gap-4 rounded-2xl border border-dashed border-gray-200 bg-white/50 p-5">
+          <div className="rounded-xl bg-gray-100 p-2.5 text-gray-400">
+            <Sprout className="size-6" aria-hidden />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-400">Khách hàng</h2>
+            <p className="mt-1 text-sm text-gray-400">Sắp có trên nhánh tiếp theo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
