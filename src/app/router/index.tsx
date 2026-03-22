@@ -5,6 +5,8 @@ import { RootLayout } from '@/app/layouts/RootLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ContractNewPage } from '@/pages/contracts/ContractNewPage'
 import { ContractsPage } from '@/pages/contracts/ContractsPage'
+import { CustomerFormPage } from '@/pages/customers/CustomerFormPage'
+import { CustomersPage } from '@/pages/customers/CustomersPage'
 import { HomePage } from '@/pages/home/HomePage'
 
 export const router = createBrowserRouter([
@@ -27,6 +29,15 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <ContractsPage /> },
           { path: 'new', element: <ContractNewPage /> },
+        ],
+      },
+      {
+        path: 'customers',
+        element: <Outlet />,
+        children: [
+          { index: true, element: <CustomersPage /> },
+          { path: 'new', element: <CustomerFormPage /> },
+          { path: ':id/edit', element: <CustomerFormPage /> },
         ],
       },
     ],
