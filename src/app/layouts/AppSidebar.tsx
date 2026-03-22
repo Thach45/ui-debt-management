@@ -1,6 +1,8 @@
-import { FileText, LayoutDashboard, Menu, Sprout, X } from 'lucide-react'
+import { FileText, LayoutDashboard, LogOut, Menu, Sprout, X } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+
+import { clearAuthTokens } from '@/shared/lib/auth-storage'
 
 const navItems = [
   { to: '/', label: 'Tổng quan', icon: LayoutDashboard, match: (p: string) => p === '/' },
@@ -15,6 +17,12 @@ const navItems = [
 export function AppSidebar() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+
+  function logout() {
+    clearAuthTokens()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <>
@@ -79,6 +87,19 @@ export function AppSidebar() {
             )
           })}
         </nav>
+        <div className="border-t border-gray-100 p-4">
+          <button
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-[15px] font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+            onClick={() => {
+              setOpen(false)
+              logout()
+            }}
+            type="button"
+          >
+            <LogOut className="size-5 shrink-0" aria-hidden />
+            Đăng xuất
+          </button>
+        </div>
       </aside>
     </>
   )
