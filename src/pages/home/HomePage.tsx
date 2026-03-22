@@ -1,4 +1,4 @@
-import { FileText, Sprout } from 'lucide-react'
+import { FileText, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export function HomePage() {
@@ -27,15 +27,22 @@ export function HomePage() {
           </div>
         </Link>
 
-        <div className="flex items-start gap-4 rounded-2xl border border-dashed border-gray-200 bg-white/50 p-5">
-          <div className="rounded-xl bg-gray-100 p-2.5 text-gray-400">
-            <Sprout className="size-6" aria-hidden />
+        <Link
+          className="group flex items-start gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+          to="/customers"
+        >
+          <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
+            <Users className="size-6" aria-hidden />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-gray-400">Khách hàng</h2>
-            <p className="mt-1 text-sm text-gray-400">Sắp có trên nhánh tiếp theo.</p>
+            <h2 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700">
+              Khách hàng
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Danh sách, thêm / sửa / xóa (quyền ADMIN).
+            </p>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   )

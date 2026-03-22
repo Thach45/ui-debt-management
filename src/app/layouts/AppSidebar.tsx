@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, LogOut, Menu, Sprout, X } from 'lucide-react'
+import { FileText, LayoutDashboard, LogOut, Menu, Sprout, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -11,6 +11,12 @@ const navItems = [
     label: 'Hợp đồng vay',
     icon: FileText,
     match: (p: string) => p === '/contracts' || p.startsWith('/contracts/'),
+  },
+  {
+    to: '/customers',
+    label: 'Khách hàng',
+    icon: Users,
+    match: (p: string) => p === '/customers' || p.startsWith('/customers/'),
   },
 ]
 
