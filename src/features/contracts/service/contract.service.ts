@@ -1,14 +1,17 @@
 import { apiClient, unwrapResponseApi } from '@/shared/api/client'
 import type { ResponseApi, SpringPage } from '@/shared/types/api'
 
-import type { ContractCreatePayload, ContractRow } from '@/features/contracts/type'
+import type { ContractCreatePayload, ContractDetail, ContractRow } from '@/features/contracts/type'
 
 export async function fetchContractsPage(
   page: number,
   size: number,
+  customerId?: string,
 ): Promise<SpringPage<ContractRow>> {
+  const params: Record<string, string | number> = { page, size }
+  if (customerId) params.customerId = customerId
   const res = await apiClient.get<ResponseApi<SpringPage<ContractRow>>>('/api/v1/contracts', {
-    params: { page, size },
+    params,
   })
   return unwrapResponseApi(res.data)
 }
@@ -16,4 +19,14 @@ export async function fetchContractsPage(
 export async function createContract(payload: ContractCreatePayload): Promise<ContractRow> {
   const res = await apiClient.post<ResponseApi<ContractRow>>('/api/v1/contracts', payload)
   return unwrapResponseApi(res.data)
+}
+
+export async function fetchContractById(id: string): Promise<ContractDetail> {
+  const res = await apiClient.get<ResponseApi<ContractDetail>>(`/api/v1/contracts/${id}`)
+  return unwrapResponseApi(res.data)
+}
+
+export async function deleteContract(id: string): Promise<void> {
+  const res = await apiClient.delete<ResponseApi<null>>(`/api/v1/contracts/${id}`)
+  unwrapResponseApi(res.data)
 }

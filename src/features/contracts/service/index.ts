@@ -1,1 +1,1 @@
-export { createContract, fetchContractsPage } from './contract.service'
+export { createContract, deleteContract, fetchContractById, fetchContractsPage } from './contract.service'
