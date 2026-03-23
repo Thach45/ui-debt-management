@@ -10,6 +10,7 @@ import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage'
 import { CustomerFormPage } from '@/pages/customers/CustomerFormPage'
 import { CustomersPage } from '@/pages/customers/CustomersPage'
 import { HomePage } from '@/pages/home/HomePage'
+import { UserAccountsPage } from '@/pages/accounts/UserAccountsPage'
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'accounts', element: <UserAccountsPage /> },
       {
         path: 'contracts',
         element: <Outlet />,
