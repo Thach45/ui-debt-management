@@ -202,10 +202,15 @@ export function ContractsPage() {
                       {q.trim() || statusFilter !== 'all' ? i + 1 : page * size + i + 1}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-base font-medium text-gray-900 transition-colors group-hover:text-emerald-600">
-                        {row.customerName}
-                      </div>
-                      <div className="text-sm text-gray-500">{row.customerPhone}</div>
+                      <Link
+                        className="block rounded-lg outline-none ring-emerald-500 focus-visible:ring-2"
+                        to={`/contracts/${row.id}`}
+                      >
+                        <div className="text-base font-medium text-gray-900 transition-colors group-hover:text-emerald-600">
+                          {row.customerName}
+                        </div>
+                        <div className="text-sm text-gray-500">{row.customerPhone}</div>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-right text-base font-medium tabular-nums text-gray-900">
                       {formatVnd(row.totalValue)}

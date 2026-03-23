@@ -138,7 +138,12 @@ export function CustomersPage() {
                 filtered.map((row) => (
                   <tr className="hover:bg-gray-50/80" key={row.id}>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{row.name}</div>
+                      <Link
+                        className="font-medium text-gray-900 hover:text-emerald-700 hover:underline"
+                        to={`/customers/${row.id}`}
+                      >
+                        {row.name}
+                      </Link>
                       {row.farmingLocation ? (
                         <div className="text-sm text-gray-500">{row.farmingLocation}</div>
                       ) : null}
