@@ -14,13 +14,10 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { deleteContract } from '@/features/contracts/service'
+import { collectPayment, deleteContract } from '@/features/contracts/service'
 import { useContractDetailQuery } from '@/features/contracts/hooks'
 import { toast } from '@/shared/lib/notify'
-import {
-  calculateLoanDetailsFromContract,
-  contractProductLabel,
-} from '@/shared/lib/contract-loan-details'
+import { contractProductLabel } from '@/shared/lib/contract-loan-details'
 import { formatDate, formatVnd } from '@/shared/lib/format'
 
 function formatPaymentDate(iso: string) {
@@ -41,10 +38,24 @@ export function ContractDetailPage() {
 
   const [showCopied, setShowCopied] = useState(false)
   const [payAmount, setPayAmount] = useState('')
-  const [payDate, setPayDate] = useState(() => new Date().toISOString().split('T')[0])
   const [payNote, setPayNote] = useState('')
+  const [receivedBy, setReceivedBy] = useState('')
 
-  const details = useMemo(() => (c ? calculateLoanDetailsFromContract(c) : null), [c])
+  const details = useMemo(
+    () =>
+      c
+        ? {
+            totalDays: c.totalDays ?? 0,
+            interestPerDay: Number(c.interestPerDay ?? 0),
+            totalInterest: Number(c.totalInterest ?? 0),
+            totalExpected: Number(c.totalExpected ?? 0),
+            totalPaid: Number(c.totalPaid ?? 0),
+            remainingAmount: Number(c.remainingAmount ?? 0),
+            status: String(c.loanStatus ?? 'active').toLowerCase(),
+          }
+        : null,
+    [c],
+  )
 
   const deleteMut = useMutation({
     mutationFn: deleteContract,
@@ -56,6 +67,19 @@ export function ContractDetailPage() {
     onError: (e: unknown) => {
       toast.error(e instanceof Error ? e.message : 'Không xóa được hợp đồng')
     },
+  })
+
+  const paymentMut = useMutation({
+    mutationFn: collectPayment,
+    onSuccess: () => {
+      toast.success('Đã ghi nhận thu tiền')
+      void qc.invalidateQueries({ queryKey: ['contract', id] })
+      void qc.invalidateQueries({ queryKey: ['contracts'] })
+      setPayAmount('')
+      setPayNote('')
+      setReceivedBy('')
+    },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   function handleShare() {
@@ -79,7 +103,27 @@ Còn lại: ${formatVnd(details.remainingAmount)}
 
   function handleAddPaymentSubmit(e: React.FormEvent) {
     e.preventDefault()
-    toast.info('Ghi nhận thu tiền qua API sẽ được bổ sung sau — hiện chỉ xem lịch sử từ máy chủ.')
+    if (!c?.id || !details) return
+    const raw = payAmount.replace(/\D/g, '')
+    const amount = Number(raw)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Nhập số tiền hợp lệ (> 0)')
+      return
+    }
+    if (amount > details.remainingAmount) {
+      toast.error(`Số tiền vượt mức còn phải thu (${formatVnd(details.remainingAmount)})`)
+      return
+    }
+    if (!receivedBy.trim()) {
+      toast.error('Nhập tên người thu tiền')
+      return
+    }
+    paymentMut.mutate({
+      contractId: c.id,
+      amount,
+      note: payNote.trim() || null,
+      receivedBy: receivedBy.trim(),
+    })
   }
 
   if (isPending) {
@@ -105,6 +149,10 @@ Còn lại: ${formatVnd(details.remainingAmount)}
 
   const productLine = contractProductLabel(c)
   const payments = c.paymentRecords ?? []
+  const canPay =
+    details.remainingAmount > 0 &&
+    details.status !== 'completed' &&
+    String(c.status).toUpperCase() !== 'COMPLETED'
 
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -186,38 +234,55 @@ Còn lại: ${formatVnd(details.remainingAmount)}
               </div>
             </div>
 
-            <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Nợ gốc</p>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Gốc ban đầu</p>
                 <p className="text-lg font-semibold text-gray-900">{formatVnd(c.principal)}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Lãi suất</p>
-                <p className="text-lg font-semibold text-gray-900">{String(c.interestRate)}%/tháng</p>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Gốc còn lại</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatVnd(c.remainingPrincipal ?? 0)}
+                </p>
+              </div>
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Lãi còn lại</p>
+                <p className="text-lg font-semibold text-orange-600">
+                  {formatVnd(c.remainingInterest ?? 0)}
+                </p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4">
                 <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Tiền lãi / ngày</p>
                 <p className="text-lg font-semibold text-orange-600">{formatVnd(details.interestPerDay)}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Tổng tiền lãi</p>
-                <p className="text-lg font-semibold text-orange-600">{formatVnd(details.totalInterest)}</p>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-gray-500">Lãi suất</p>
+                <p className="text-lg font-semibold text-gray-900">{String(c.interestRate)}%/tháng</p>
               </div>
             </div>
 
             <div className="border-t border-gray-100 pt-6">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-gray-600">Tổng phải thanh toán (Gốc + Lãi):</span>
+                <span className="text-gray-600">Tổng phải thanh toán (Gốc ban đầu + Lãi):</span>
                 <span className="text-xl font-semibold text-gray-900">{formatVnd(details.totalExpected)}</span>
               </div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-gray-600">Đã thanh toán:</span>
                 <span className="text-lg font-medium text-emerald-600">{formatVnd(details.totalPaid)}</span>
               </div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-gray-600">Tổng tiền lãi:</span>
+                <span className="text-lg font-medium text-orange-600">{formatVnd(details.totalInterest)}</span>
+              </div>
               <div className="flex items-center justify-between border-t border-gray-100 pt-2">
                 <span className="font-medium text-gray-900">Còn lại cần thu:</span>
                 <span className="text-2xl font-bold text-emerald-600">{formatVnd(details.remainingAmount)}</span>
               </div>
+              {Number(c.remainingPrincipal ?? 0) <= 0 && details.remainingAmount > 0 ? (
+                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Gốc đã về 0 nhưng vẫn còn khoản lãi/chênh lệch cần thu: {formatVnd(details.remainingAmount)}.
+                </p>
+              ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-4 text-xs text-gray-400">
@@ -253,23 +318,25 @@ Còn lại: ${formatVnd(details.remainingAmount)}
               <input
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
                 id="pay-amount"
-                min={0}
+                inputMode="numeric"
                 onChange={(e) => setPayAmount(e.target.value)}
-                placeholder="Nhập số tiền..."
-                type="number"
+                placeholder="VD: 5000000"
+                type="text"
                 value={payAmount}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="pay-date">
-                Ngày thu
+              <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="pay-received-by">
+                Người thu tiền
               </label>
               <input
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
-                id="pay-date"
-                onChange={(e) => setPayDate(e.target.value)}
-                type="date"
-                value={payDate}
+                id="pay-received-by"
+                autoComplete="name"
+                onChange={(e) => setReceivedBy(e.target.value)}
+                placeholder="Họ tên nhân viên"
+                type="text"
+                value={receivedBy}
               />
             </div>
             <div>
@@ -280,19 +347,21 @@ Còn lại: ${formatVnd(details.remainingAmount)}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
                 id="pay-note"
                 onChange={(e) => setPayNote(e.target.value)}
-                placeholder="VD: Thu tiền mặt..."
+                placeholder="VD: Thu tiền mặt, chuyển khoản..."
                 type="text"
                 value={payNote}
               />
             </div>
             <button
               className="w-full rounded-lg bg-emerald-600 py-2.5 font-medium text-white transition-colors hover:bg-emerald-700 disabled:bg-gray-400"
-              disabled={details.remainingAmount <= 0}
+              disabled={!canPay || paymentMut.isPending}
               type="submit"
             >
-              Lưu giao dịch
+              {paymentMut.isPending ? 'Đang gửi…' : 'Lưu giao dịch'}
             </button>
-            <p className="text-center text-xs text-gray-400">Ghi nhận qua API đang phát triển — bấm sẽ thông báo.</p>
+            <p className="text-center text-xs text-gray-400">
+              Gửi lên <span className="font-mono">POST /api/v1/payments/collect</span> — thời gian ghi nhận theo máy chủ.
+            </p>
           </form>
         </div>
       </div>
@@ -314,6 +383,8 @@ Còn lại: ${formatVnd(details.remainingAmount)}
                 <tr className="bg-gray-50 text-sm uppercase tracking-wider text-gray-500">
                   <th className="px-6 py-4 font-medium">Ngày thu</th>
                   <th className="px-6 py-4 font-medium">Số tiền</th>
+                  <th className="px-6 py-4 font-medium text-right">Vào lãi</th>
+                  <th className="px-6 py-4 font-medium text-right">Vào gốc</th>
                   <th className="px-6 py-4 font-medium">Ghi chú</th>
                   <th className="px-6 py-4 font-medium">Người thu</th>
                 </tr>
@@ -323,6 +394,12 @@ Còn lại: ${formatVnd(details.remainingAmount)}
                   <tr className="transition-colors hover:bg-gray-50/50" key={payment.id}>
                     <td className="px-6 py-4 text-sm text-gray-900">{formatPaymentDate(payment.paidAt)}</td>
                     <td className="px-6 py-4 text-sm font-medium text-emerald-600">{formatVnd(payment.amount)}</td>
+                    <td className="px-6 py-4 text-right text-sm tabular-nums text-orange-600">
+                      {formatVnd(payment.appliedToInterest ?? 0)}
+                    </td>
+                    <td className="px-6 py-4 text-right text-sm tabular-nums text-gray-900">
+                      {formatVnd(payment.appliedToPrincipal ?? 0)}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-500">{payment.note || '—'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{payment.receivedBy || '—'}</td>
                   </tr>

@@ -27,3 +27,10 @@ export async function deleteCustomer(id: string): Promise<void> {
   const res = await apiClient.delete<ResponseApi<null>>(`/api/v1/customers/${id}`)
   unwrapResponseApi(res.data)
 }
+
+export async function searchCustomers(keyword: string): Promise<CustomerRow[]> {
+  const res = await apiClient.get<ResponseApi<CustomerRow[]>>('/api/v1/customers/search', {
+    params: { keyword },
+  })
+  return unwrapResponseApi(res.data)
+}

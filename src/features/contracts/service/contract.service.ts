@@ -1,7 +1,12 @@
 import { apiClient, unwrapResponseApi } from '@/shared/api/client'
 import type { ResponseApi, SpringPage } from '@/shared/types/api'
 
-import type { ContractCreatePayload, ContractDetail, ContractRow } from '@/features/contracts/type'
+import type {
+  ContractCreatePayload,
+  ContractDetail,
+  ContractRow,
+  PaymentCollectPayload,
+} from '@/features/contracts/type'
 
 export async function fetchContractsPage(
   page: number,
@@ -29,4 +34,10 @@ export async function fetchContractById(id: string): Promise<ContractDetail> {
 export async function deleteContract(id: string): Promise<void> {
   const res = await apiClient.delete<ResponseApi<null>>(`/api/v1/contracts/${id}`)
   unwrapResponseApi(res.data)
+}
+
+/** Ghi nhận thu tiền trừ nợ gốc — POST `/api/v1/payments/collect` */
+export async function collectPayment(payload: PaymentCollectPayload): Promise<ContractDetail> {
+  const res = await apiClient.post<ResponseApi<ContractDetail>>('/api/v1/payments/collect', payload)
+  return unwrapResponseApi(res.data)
 }

@@ -15,7 +15,7 @@ import { toast } from '@/shared/lib/notify'
 type AccountStatus = 'active' | 'locked'
 
 const inputClass =
-  'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500'
+  'w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500'
 
 function normalizeStatus(s: string | null | undefined): AccountStatus {
   return s === 'locked' ? 'locked' : 'active'
@@ -165,8 +165,8 @@ export function UserAccountsPage() {
     <div className="mx-auto max-w-6xl px-5 text-left md:px-6">
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Tài khoản hệ thống</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Tài khoản hệ thống</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
             {tab === 'accounts'
               ? 'Quản lý người dùng (ADMIN / STAFF) — đồng bộ với API backend.'
               : 'Gán permission (mã endpoint) cho từng vai trò — dữ liệu từ API.'}
@@ -184,12 +184,12 @@ export function UserAccountsPage() {
         ) : null}
       </div>
 
-      <div className="mb-6 flex gap-1 border-b border-gray-200">
+      <div className="mb-6 flex gap-1 border-b border-gray-200 dark:border-slate-800">
         <button
           className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
             tab === 'accounts'
               ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-gray-500 hover:text-gray-800'
+              : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-slate-400 dark:hover:text-slate-100'
           }`}
           onClick={() => setTab('accounts')}
           type="button"
@@ -200,7 +200,7 @@ export function UserAccountsPage() {
           className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
             tab === 'roles'
               ? 'border-emerald-600 text-emerald-700'
-              : 'border-transparent text-gray-500 hover:text-gray-800'
+              : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-slate-400 dark:hover:text-slate-100'
           }`}
           onClick={() => setTab('roles')}
           type="button"
@@ -222,29 +222,29 @@ export function UserAccountsPage() {
           ) : null}
 
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="mb-1 text-sm font-medium text-gray-500">Tổng tài khoản</div>
-              <div className="text-xl font-bold tabular-nums text-gray-900">{summary.total}</div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Tổng tài khoản</div>
+              <div className="text-xl font-bold tabular-nums text-gray-900 dark:text-slate-100">{summary.total}</div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="mb-1 text-sm font-medium text-gray-500">Đang hoạt động</div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Đang hoạt động</div>
               <div className="text-xl font-bold tabular-nums text-emerald-600">{summary.active}</div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="mb-1 text-sm font-medium text-gray-500">Quản trị (ADMIN)</div>
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Quản trị (ADMIN)</div>
               <div className="text-xl font-bold tabular-nums text-amber-700">{summary.admins}</div>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="flex flex-col gap-4 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
               <div className="relative w-full sm:max-w-md">
                 <Search
-                  className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-400"
+                  className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-gray-400 dark:text-slate-500"
                   aria-hidden
                 />
                 <input
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none ring-emerald-500 placeholder:text-gray-400 focus:ring-2"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 pl-10 pr-4 text-sm text-gray-900 outline-none ring-emerald-500 placeholder:text-gray-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500"
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Tìm theo tên đăng nhập, email, SĐT…"
                   type="search"
@@ -257,9 +257,9 @@ export function UserAccountsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100 text-sm">
+              <table className="min-w-full divide-y divide-gray-100 text-sm dark:divide-slate-800">
                 <thead>
-                  <tr className="bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <tr className="bg-gray-50/80 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-slate-950/50 dark:text-slate-400">
                     <th className="px-4 py-3">Tên đăng nhập</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">SĐT</th>
@@ -269,7 +269,7 @@ export function UserAccountsPage() {
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                   {usersQuery.isLoading ? (
                     <tr>
                       <td className="px-4 py-10 text-center text-gray-500" colSpan={7}>
@@ -285,11 +285,13 @@ export function UserAccountsPage() {
                   ) : (
                     filtered.map((row) => (
                       <tr className="hover:bg-gray-50/80" key={row.id}>
-                        <td className="px-4 py-3 font-mono text-sm text-gray-900">{row.username}</td>
+                        <td className="px-4 py-3 font-mono text-sm text-gray-900 dark:text-slate-100">
+                          {row.username}
+                        </td>
                         <td className="max-w-[200px] truncate px-4 py-3 text-gray-600" title={row.email}>
                           {row.email}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">{row.phone ?? '—'}</td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{row.phone ?? '—'}</td>
                         <td className="px-4 py-3">
                           {row.role === 'ADMIN' ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
@@ -305,16 +307,16 @@ export function UserAccountsPage() {
                         </td>
                         <td className="px-4 py-3">
                           {normalizeStatus(row.status) === 'active' ? (
-                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
                               Hoạt động
                             </span>
                           ) : (
-                            <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                            <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-slate-800 dark:text-slate-200">
                               Đã khóa
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 tabular-nums text-gray-600">—</td>
+                        <td className="px-4 py-3 tabular-nums text-gray-600 dark:text-slate-400">—</td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1">
                             <button

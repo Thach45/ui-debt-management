@@ -1,20 +1,20 @@
 import { ArrowLeft, Calendar, Package, Save, User } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 
 import { useCreateContractMutation } from '@/features/contracts/hooks'
 import type { ContractCreatePayload } from '@/features/contracts/type'
+import { searchCustomers } from '@/features/customers/service/customer.service'
+import type { CustomerRow } from '@/features/customers/type'
 import { formatVnd } from '@/shared/lib/format'
 import { toast } from '@/shared/lib/notify'
 
-/** Khi có API danh sách khách — điền vào đây để giống bản Remix (autofill tên/SĐT). */
-const CUSTOMERS: { id: string; name: string; phone: string }[] = []
-
 const inputClass =
-  'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500'
+  'w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100 dark:placeholder:text-slate-500'
 
 const selectClass =
-  'w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500'
+  'w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100'
 
 function defaultEndDateIso(): string {
   const d = new Date()
@@ -70,6 +70,8 @@ function buildPayload(state: {
 export function ContractNewPage() {
   const navigate = useNavigate()
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  const [customerKeyword, setCustomerKeyword] = useState('')
+  const [debouncedKeyword, setDebouncedKeyword] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
 
@@ -90,9 +92,22 @@ export function ContractNewPage() {
     [totalValue, downPayment],
   )
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedKeyword(customerKeyword.trim()), 300)
+    return () => clearTimeout(t)
+  }, [customerKeyword])
+
+  const customerSearchQuery = useQuery({
+    queryKey: ['customers-search', debouncedKeyword],
+    queryFn: () => searchCustomers(debouncedKeyword),
+    enabled: debouncedKeyword.length >= 2,
+    staleTime: 30_000,
+  })
+
+  const searchRows: CustomerRow[] = customerSearchQuery.data ?? []
   const selectedCustomer = useMemo(
-    () => CUSTOMERS.find((x) => x.id === selectedCustomerId),
-    [selectedCustomerId],
+    () => searchRows.find((x) => x.id === selectedCustomerId) ?? null,
+    [searchRows, selectedCustomerId],
   )
 
   const displayName = selectedCustomer ? selectedCustomer.name : customerName
@@ -126,51 +141,86 @@ export function ContractNewPage() {
     if (!id) {
       setCustomerName('')
       setCustomerPhone('')
+      return
+    }
+    const found = searchRows.find((x) => x.id === id)
+    if (found) {
+      setCustomerName(found.name)
+      setCustomerPhone(found.phone)
+      setCustomerKeyword(`${found.name} - ${found.phone}`)
     }
   }
 
   return (
     <div className="mx-auto max-w-3xl p-6">
       <Link
-        className="mb-6 flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-900"
+        className="mb-6 flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100"
         to="/contracts"
       >
         <ArrowLeft className="size-5 shrink-0" aria-hidden />
         <span>Quay lại</span>
       </Link>
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-        <h2 className="mb-6 text-2xl font-semibold text-gray-900">Tạo hợp đồng trả góp mới</h2>
+      <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+        <h2 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-slate-100">Tạo hợp đồng trả góp mới</h2>
 
         <form className="space-y-8" onSubmit={onSubmit}>
           {/* Thông tin khách hàng */}
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-slate-100">
               <User className="size-5 shrink-0 text-emerald-600" aria-hidden />
               Thông tin khách hàng
             </h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Chọn khách hàng có sẵn (Tùy chọn)
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" htmlFor="customer-search">
+                  Tìm khách hàng (theo tên/SĐT)
                 </label>
-                <select
-                  className={selectClass}
-                  onChange={(e) => onCustomerSelect(e.target.value)}
-                  value={selectedCustomerId}
-                >
-                  <option value="">-- Nhập mới khách hàng bên dưới --</option>
-                  {CUSTOMERS.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} - {c.phone}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  id="customer-search"
+                  className={inputClass}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setCustomerKeyword(v)
+                    if (!v.trim()) {
+                      onCustomerSelect('')
+                    }
+                  }}
+                  placeholder="Nhập ít nhất 2 ký tự…"
+                  type="search"
+                  value={customerKeyword}
+                />
+                {customerSearchQuery.isFetching ? (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">Đang tìm…</p>
+                ) : null}
+                {debouncedKeyword.length >= 2 && !customerSearchQuery.isFetching && searchRows.length === 0 ? (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">Không tìm thấy khách phù hợp.</p>
+                ) : null}
+                {searchRows.length > 0 ? (
+                  <div className="mt-3">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" htmlFor="customer-select">
+                      Chọn khách tìm thấy
+                    </label>
+                    <select
+                      id="customer-select"
+                      className={selectClass}
+                      onChange={(e) => onCustomerSelect(e.target.value)}
+                      value={selectedCustomerId}
+                    >
+                      <option value="">-- Nhập mới khách hàng bên dưới --</option>
+                      {searchRows.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} - {c.phone}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Tên khách hàng</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Tên khách hàng</label>
                 <input
-                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500`}
+                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-slate-950/30 dark:disabled:text-slate-400`}
                   disabled={Boolean(selectedCustomerId)}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Nguyễn Văn A"
@@ -180,9 +230,9 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Số điện thoại</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Số điện thoại</label>
                 <input
-                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500`}
+                  className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-500 dark:disabled:bg-slate-950/30 dark:disabled:text-slate-400`}
                   disabled={Boolean(selectedCustomerId)}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="0901234567"
@@ -196,13 +246,13 @@ export function ContractNewPage() {
 
           {/* Thông tin đơn hàng */}
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-slate-100">
               <Package className="size-5 shrink-0 text-emerald-600" aria-hidden />
               Thông tin đơn hàng
             </h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div className="md:col-span-3">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Tên phân bón</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Tên phân bón</label>
                 <input
                   className={inputClass}
                   onChange={(e) => setProductName(e.target.value)}
@@ -213,7 +263,7 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Tổng giá trị (VNĐ)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Tổng giá trị (VNĐ)</label>
                 <input
                   className={inputClass + ' tabular-nums'}
                   min={0}
@@ -225,7 +275,7 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Trả trước (VNĐ)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Trả trước (VNĐ)</label>
                 <input
                   className={inputClass + ' tabular-nums'}
                   min={0}
@@ -237,8 +287,8 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Nợ gốc cần trả góp</label>
-                <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Nợ gốc cần trả góp</label>
+                <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 font-semibold text-gray-700 dark:border-slate-700 dark:bg-slate-950/40 dark:text-slate-200">
                   {formatVnd(principal)}
                 </div>
               </div>
@@ -247,13 +297,13 @@ export function ContractNewPage() {
 
           {/* Thông tin trả góp */}
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-900 dark:text-slate-100">
               <Calendar className="size-5 shrink-0 text-emerald-600" aria-hidden />
               Thời gian & Lãi suất (Tính theo ngày)
             </h3>
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Ngày mượn</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Ngày mượn</label>
                 <input
                   className={inputClass}
                   onChange={(e) => setStartDate(e.target.value)}
@@ -263,7 +313,7 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Ngày trả (Dự kiến)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Ngày trả (Dự kiến)</label>
                 <input
                   className={inputClass}
                   onChange={(e) => setEndDate(e.target.value)}
@@ -273,14 +323,14 @@ export function ContractNewPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Loại lãi suất</label>
-                <select className={inputClass + ' bg-white'} defaultValue="simple">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Loại lãi suất</label>
+                <select className={selectClass} defaultValue="simple">
                   <option value="simple">Lãi đơn (Tính trên nợ gốc ban đầu)</option>
                   {/* <option value="compound">Lãi kép (Tính trên dư nợ giảm dần)</option> */}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Lãi suất (% / tháng)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Lãi suất (% / tháng)</label>
                 <input
                   className={inputClass + ' tabular-nums'}
                   min={0}
@@ -293,7 +343,7 @@ export function ContractNewPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Ghi chú thêm</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Ghi chú thêm</label>
                 <textarea
                   className={inputClass + ' resize-none'}
                   onChange={(e) => setNote(e.target.value)}
@@ -305,7 +355,7 @@ export function ContractNewPage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-100 pt-4 dark:border-slate-800">
             <button
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3.5 text-lg font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:bg-gray-400"
               disabled={principal <= 0 || mutation.isPending}

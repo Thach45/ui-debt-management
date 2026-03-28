@@ -10,7 +10,7 @@ import {
 import type { CustomerRow, CustomerTier } from '@/features/customers/type'
 
 const inputClass =
-  'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500'
+  'w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-100'
 
 const TIERS: { value: CustomerTier; label: string }[] = [
   { value: 'STANDARD', label: 'Tiêu chuẩn' },
@@ -131,25 +131,25 @@ function CustomerFormFields({
   return (
     <div className="mx-auto max-w-2xl px-5 pb-8 text-left md:px-6">
       <Link
-        className="mb-5 flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-900"
+        className="mb-5 flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100"
         to="/customers"
       >
         <ArrowLeft className="size-5" aria-hidden />
         <span>Quay lại danh sách</span>
       </Link>
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:p-8">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">{title}</h1>
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900/60">
+        <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-slate-100">{title}</h1>
 
         <form className="space-y-6" onSubmit={onSubmit}>
           <div>
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-slate-100">
               <User className="size-5 text-emerald-600" aria-hidden />
               Thông tin
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Họ tên</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Họ tên</label>
                 <input
                   className={inputClass}
                   onChange={(e) => setName(e.target.value)}
@@ -159,7 +159,7 @@ function CustomerFormFields({
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Số điện thoại</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Số điện thoại</label>
                 <input
                   className={inputClass + ' tabular-nums'}
                   onChange={(e) => setPhone(e.target.value)}
@@ -170,7 +170,7 @@ function CustomerFormFields({
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">Địa chỉ</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Địa chỉ</label>
                 <input
                   className={inputClass}
                   onChange={(e) => setAddress(e.target.value)}
@@ -179,7 +179,7 @@ function CustomerFormFields({
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">
                   Vùng canh tác / trồng trọt
                 </label>
                 <input
@@ -190,9 +190,9 @@ function CustomerFormFields({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Hạng khách</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Hạng khách</label>
                 <select
-                  className={inputClass + ' bg-white'}
+                  className={inputClass}
                   onChange={(e) => setCustomerTier(e.target.value as CustomerTier)}
                   value={state.customerTier}
                 >
@@ -206,7 +206,7 @@ function CustomerFormFields({
             </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-6">
+          <div className="border-t border-gray-100 pt-6 dark:border-slate-800">
             <button
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:bg-gray-400"
               disabled={busy}

@@ -15,77 +15,77 @@ import {
 
 import { formatVnd } from '@/shared/lib/format'
 
-/**
- * Dữ liệu mẫu — chỉ phục vụ giao diện tổng quan (chưa nối API).
- * Cấu trúc giống `remix/.../components/Dashboard.tsx`.
- */
-const MOCK = {
-  totalContracts: 24,
-  activeCount: 12,
-  overdueCount: 3,
-  completedCount: 9,
-  totalCollected: 452_500_000,
-  totalRemaining: 186_300_000,
-}
+import { useDashboardStatsQuery } from '@/features/dashboard/hooks'
 
 export function HomePage() {
+  const statsQuery = useDashboardStatsQuery()
+  const stats = statsQuery.data
+
   const statusData = [
-    { name: 'Đang vay', value: MOCK.activeCount, color: '#3b82f6' },
-    { name: 'Quá hạn', value: MOCK.overdueCount, color: '#ef4444' },
-    { name: 'Đã tất toán', value: MOCK.completedCount, color: '#10b981' },
+    { name: 'Đang vay', value: (stats?.activeCount ?? 0), color: '#3b82f6' },
+    { name: 'Quá hạn', value: (stats?.overdueCount ?? 0), color: '#ef4444' },
+    { name: 'Đã tất toán', value: (stats?.completedCount ?? 0), color: '#10b981' },
   ].filter((item) => item.value > 0)
 
   const financialData = [
     {
       name: 'Tài chính',
-      'Đã thu': MOCK.totalCollected,
-      'Còn lại': MOCK.totalRemaining,
+      'Đã thu': (stats?.totalCollected ?? 0),
+      'Còn lại': (stats?.totalRemaining ?? 0),
     },
   ]
 
-  const hasContracts = MOCK.totalContracts > 0
+  const hasContracts = (stats?.totalContracts ?? 0) > 0
 
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tổng quan</h1>
-        <p className="mt-1 text-gray-500">Thống kê và biểu đồ tình hình kinh doanh (dữ liệu mẫu)</p>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Tổng quan</h1>
+        <p className="mt-1 text-gray-500 dark:text-slate-400">Thống kê và biểu đồ tình hình kinh doanh</p>
       </div>
 
+      {statsQuery.isError ? (
+        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {(statsQuery.error as Error).message || 'Không tải được số liệu tổng quan.'}
+        </div>
+      ) : null}
+
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="mb-1 flex items-center gap-1 text-sm font-medium text-gray-500">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="mb-1 flex items-center gap-1 text-sm font-medium text-gray-500 dark:text-slate-400">
             <TrendingUp className="size-4 shrink-0" aria-hidden />
             Tổng hợp đồng
           </div>
-          <div className="text-2xl font-bold tabular-nums text-gray-900">{MOCK.totalContracts}</div>
+          <div className="text-2xl font-bold tabular-nums text-gray-900 dark:text-slate-100">
+            {(stats?.totalContracts ?? 0)}
+          </div>
         </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
           <div className="mb-1 flex items-center gap-1 text-sm font-medium text-blue-600">
             <Clock className="size-4 shrink-0" aria-hidden />
             Đang vay
           </div>
-          <div className="text-2xl font-bold tabular-nums text-blue-700">{MOCK.activeCount}</div>
+          <div className="text-2xl font-bold tabular-nums text-blue-700">{(stats?.activeCount ?? 0)}</div>
         </div>
-        <div className="rounded-2xl border border-red-100 bg-red-50/30 p-6 shadow-sm">
+        <div className="rounded-2xl border border-red-100 bg-red-50/30 p-6 shadow-sm dark:border-red-900/40 dark:bg-red-950/20">
           <div className="mb-1 flex items-center gap-1 text-sm font-medium text-red-600">
             <AlertCircle className="size-4 shrink-0" aria-hidden />
             Quá hạn
           </div>
-          <div className="text-2xl font-bold tabular-nums text-red-700">{MOCK.overdueCount}</div>
+          <div className="text-2xl font-bold tabular-nums text-red-700">{(stats?.overdueCount ?? 0)}</div>
         </div>
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-6 shadow-sm">
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/15">
           <div className="mb-1 flex items-center gap-1 text-sm font-medium text-emerald-600">
             <CheckCircle className="size-4 shrink-0" aria-hidden />
             Đã tất toán
           </div>
-          <div className="text-2xl font-bold tabular-nums text-emerald-700">{MOCK.completedCount}</div>
+          <div className="text-2xl font-bold tabular-nums text-emerald-700">{(stats?.completedCount ?? 0)}</div>
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h3 className="mb-6 text-lg font-semibold text-gray-900">Trạng thái hợp đồng</h3>
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-slate-100">Trạng thái hợp đồng</h3>
           <div className="h-72">
             {hasContracts && statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -111,13 +111,15 @@ export function HomePage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-gray-500">Chưa có dữ liệu</div>
+              <div className="flex h-full items-center justify-center text-gray-500 dark:text-slate-400">
+                Chưa có dữ liệu
+              </div>
             )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h3 className="mb-6 text-lg font-semibold text-gray-900">Tình hình thu hồi vốn</h3>
+        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-slate-100">Tình hình thu hồi vốn</h3>
           <div className="h-72">
             {hasContracts ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -135,15 +137,15 @@ export function HomePage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-gray-500">Chưa có dữ liệu</div>
+              <div className="flex h-full items-center justify-center text-gray-500 dark:text-slate-400">
+                Chưa có dữ liệu
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      <p className="text-center text-xs text-gray-400">
-        Số liệu trên là minh họa. Khi nối API, thay thế biến <code className="rounded bg-gray-100 px-1">MOCK</code>.
-      </p>
+      <p className="text-center text-xs text-gray-400 dark:text-slate-500">Số liệu lấy từ API.</p>
     </div>
   )
 }
