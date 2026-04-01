@@ -50,7 +50,6 @@ export function ContractDetailPage() {
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [payAmount, setPayAmount] = useState('')
   const [payNote, setPayNote] = useState('')
-  const [receivedBy, setReceivedBy] = useState('')
 
   const details = useMemo(() => {
     if (!c) return null
