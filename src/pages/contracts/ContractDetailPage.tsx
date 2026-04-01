@@ -85,7 +85,7 @@ export function ContractDetailPage() {
       void qc.invalidateQueries({ queryKey: ['contracts'] })
       setPayAmount('')
       setPayNote('')
-      setReceivedBy('')
+     
       setShowPaymentForm(false)
     },
     onError: (e: Error) => toast.error(e.message),
@@ -122,15 +122,12 @@ Còn lại: ${formatVnd(d.remainingAmount)}
       toast.error(`Số tiền vượt mức còn phải thu (${formatVnd(details.remainingAmount)})`)
       return
     }
-    if (!receivedBy.trim()) {
-      toast.error('Nhập tên người thu tiền')
-      return
-    }
+    
     paymentMut.mutate({
       contractId: c.id,
       amount,
       note: payNote.trim() || null,
-      receivedBy: receivedBy.trim(),
+    
     })
   }
 
@@ -476,26 +473,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                       />
                     </div>
 
-                    <div>
-                      <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="pay-received-by">
-                        Người thu tiền <span className="text-rose-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <User className="size-4 text-slate-400" aria-hidden />
-                        </div>
-                        <input
-                          id="pay-received-by"
-                          autoComplete="name"
-                          className="block w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm text-slate-900 shadow-sm transition-shadow focus:border-teal-500 focus:ring-teal-500/20"
-                          placeholder="Họ tên nhân viên"
-                          type="text"
-                          value={receivedBy}
-                          onChange={(e) => setReceivedBy(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
+                   
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="pay-note">
                         Ghi chú
