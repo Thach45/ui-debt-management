@@ -122,15 +122,15 @@ Còn lại: ${formatVnd(d.remainingAmount)}
       toast.error(`Số tiền vượt mức còn phải thu (${formatVnd(details.remainingAmount)})`)
       return
     }
-    if (!receivedBy.trim()) {
-      toast.error('Nhập tên người thu tiền')
-      return
-    }
+    // if (!receivedBy.trim()) {
+    //   toast.error('Nhập tên người thu tiền')
+    //   return
+    // }
     paymentMut.mutate({
       contractId: c.id,
       amount,
       note: payNote.trim() || null,
-      receivedBy: receivedBy.trim(),
+      receivedBy: '',
     })
   }
 
@@ -476,7 +476,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                       />
                     </div>
 
-                    <div>
+                    {/* <div>
                       <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="pay-received-by">
                         Người thu tiền <span className="text-rose-500">*</span>
                       </label>
@@ -494,7 +494,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                           onChange={(e) => setReceivedBy(e.target.value)}
                         />
                       </div>
-                    </div>
+                    </div> */}
 
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="pay-note">
