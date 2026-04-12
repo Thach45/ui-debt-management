@@ -9,6 +9,7 @@ import {
 } from '@/features/customers/hooks'
 import type { CustomerRow } from '@/features/customers/type'
 import { formatVnd } from '@/shared/lib/format'
+import { isAdminRole } from '@/shared/lib/auth-role'
 
 function toNum(v: string | number | null | undefined) {
   if (v === null || v === undefined) return 0
@@ -19,6 +20,7 @@ export function CustomersPage() {
   const [q, setQ] = useState('')
   const { data, isPending, isError, error, isFetching, refetchWithToast } = useCustomersQuery()
   const deleteMutation = useDeleteCustomerMutation()
+  const isAdmin = isAdminRole()
 
   const rows = useMemo(() => data ?? [], [data])
 
@@ -45,7 +47,7 @@ export function CustomersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Khách hàng</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            Danh sách khách hàng — chỉ tài khoản quản trị (ADMIN) mới gọi được API.
+            Danh sách khách hàng
           </p>
         </div>
         <Link
@@ -167,15 +169,17 @@ export function CustomersPage() {
                         >
                           <Pencil className="size-4" aria-hidden />
                         </Link>
-                        <button
-                          className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                          disabled={deleteMutation.isPending}
-                          onClick={() => confirmDelete(row)}
-                          title="Xóa"
-                          type="button"
-                        >
-                          <Trash2 className="size-4" aria-hidden />
-                        </button>
+                        {isAdmin ? (
+                          <button
+                            className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => confirmDelete(row)}
+                            title="Xóa khách hàng"
+                            type="button"
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>

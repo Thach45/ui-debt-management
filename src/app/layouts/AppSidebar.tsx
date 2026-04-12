@@ -3,9 +3,19 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { clearAuthTokens } from '@/shared/lib/auth-storage'
+import { isAdminRole } from '@/shared/lib/auth-role'
 
-const navItems = [
-  { to: '/', label: 'Tổng quan', icon: LayoutDashboard, match: (p: string) => p === '/' },
+type NavItem = {
+  to: string
+  label: string
+  icon: typeof LayoutDashboard
+  match: (p: string) => boolean
+  /** Chỉ hiện cho ADMIN */
+  adminOnly?: boolean
+}
+
+const navItems: NavItem[] = [
+  { to: '/', label: 'Tổng quan', icon: LayoutDashboard, match: (p: string) => p === '/', adminOnly: true },
   {
     to: '/contracts',
     label: 'Hợp đồng vay',
@@ -23,6 +33,7 @@ const navItems = [
     label: 'Tài khoản',
     icon: UserCog,
     match: (p: string) => p === '/accounts' || p.startsWith('/accounts/'),
+    adminOnly: true,
   },
 ]
 
@@ -30,6 +41,8 @@ export function AppSidebar() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const admin = isAdminRole()
+  const visibleNav = navItems.filter((item) => !item.adminOnly || admin)
 
   function logout() {
     clearAuthTokens()
@@ -79,7 +92,7 @@ export function AppSidebar() {
         </div>
         <div className="h-16 md:hidden" />
         <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-6">
-          {navItems.map((item) => {
+          {visibleNav.map((item) => {
             const Icon = item.icon
             const active = item.match(pathname)
             return (

@@ -166,11 +166,7 @@ export function UserAccountsPage() {
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Tài khoản hệ thống</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            {tab === 'accounts'
-              ? 'Quản lý người dùng (ADMIN / STAFF) — đồng bộ với API backend.'
-              : 'Gán permission (mã endpoint) cho từng vai trò — dữ liệu từ API.'}
-          </p>
+          
         </div>
         {tab === 'accounts' ? (
           <button
@@ -476,7 +472,7 @@ export function UserAccountsPage() {
                   <p className="text-xs text-gray-400">
                     {editingId
                       ? 'Đổi mật khẩu: nhập mật khẩu mới; để trống để giữ mật khẩu hiện tại.'
-                      : 'Mật khẩu tối thiểu 6 ký tự (theo backend).'}
+                      : 'Mật khẩu tối thiểu 6 ký tự.'}
                   </p>
                   <div className="flex justify-end gap-2 pt-2">
                     <button

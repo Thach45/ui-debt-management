@@ -11,7 +11,22 @@ function toNum(v: string | number) {
   return typeof v === 'number' ? v : Number(v) || 0
 }
 
-type StatusFilter = 'all' | 'overdue' | 'completed'
+/**
+ * Trạng thái hiển thị / lọc — ưu tiên `loanStatus` (khớp chi tiết & máy chủ tính),
+ * fallback `status` (enum DB).
+ */
+function listRowUiStatus(row: ContractRow): 'OVERDUE' | 'COMPLETED' | 'ACTIVE' | 'CANCELLED' {
+  const ls = String(row.loanStatus ?? '').toLowerCase()
+  if (ls === 'overdue') return 'OVERDUE'
+  if (ls === 'completed') return 'COMPLETED'
+  const st = String(row.status ?? '').toUpperCase()
+  if (st === 'CANCELLED' || st === 'COMPLETED' || st === 'OVERDUE') {
+    return st as 'CANCELLED' | 'COMPLETED' | 'OVERDUE'
+  }
+  return 'ACTIVE'
+}
+
+type StatusFilter = 'all' | 'active' | 'overdue' | 'completed'
 
 export function ContractsPage() {
   const [page, setPage] = useState(0)
@@ -33,7 +48,7 @@ export function ContractsPage() {
     for (const r of rows) {
       totalRemainingDebt += toNum(r.remainingAmount ?? 0)
       totalValue += toNum(r.totalValue)
-      if (r.status === 'OVERDUE') overdue += 1
+      if (listRowUiStatus(r) === 'OVERDUE') overdue += 1
     }
     return { totalRemainingDebt, totalValue, overdue }
   }, [rows])
@@ -47,8 +62,10 @@ export function ContractsPage() {
         r.customerPhone.includes(t) ||
         r.id.toLowerCase().includes(t)
       if (!matchQ) return false
-      if (statusFilter === 'overdue') return r.status === 'OVERDUE'
-      if (statusFilter === 'completed') return r.status === 'COMPLETED'
+      const ui = listRowUiStatus(r)
+      if (statusFilter === 'active') return ui === 'ACTIVE'
+      if (statusFilter === 'overdue') return ui === 'OVERDUE'
+      if (statusFilter === 'completed') return ui === 'COMPLETED'
       return true
     })
   }, [rows, q, statusFilter])
@@ -71,25 +88,25 @@ export function ContractsPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Tổng dư nợ (trang này)</div>
+          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Cần thu</div>
           <div className="text-xl font-bold tabular-nums text-gray-900 dark:text-slate-100">
             {formatVnd(metrics.totalRemainingDebt)}
           </div>
         </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Tổng giá trị (trang này)</div>
+        {/* <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Tổng giá trị đã cho vay</div>
           <div className="text-xl font-bold tabular-nums text-orange-600">
             {formatVnd(metrics.totalValue)}
           </div>
-        </div>
+        </div> */}
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Số hợp đồng (trang này)</div>
+          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Số hợp đồng đang vay</div>
           <div className="text-xl font-bold tabular-nums text-emerald-600">{rows.length}</div>
         </div>
         <div className="rounded-2xl border border-red-100 bg-red-50/30 p-5 shadow-sm dark:border-red-900/40 dark:bg-red-950/20">
           <div className="mb-1 flex items-center gap-1 text-sm font-medium text-red-600">
             <AlertCircle className="size-4" aria-hidden />
-            Quá hạn (trang này)
+            Quá hạn
           </div>
           <div className="text-xl font-bold tabular-nums text-red-700">
             {metrics.overdue}{' '}
@@ -118,8 +135,8 @@ export function ContractsPage() {
             <button
               className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
                 statusFilter === 'all'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
               onClick={() => setStatusFilter('all')}
               type="button"
@@ -128,9 +145,20 @@ export function ContractsPage() {
             </button>
             <button
               className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                statusFilter === 'active'
+                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setStatusFilter('active')}
+              type="button"
+            >
+              Đang vay
+            </button>
+            <button
+              className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
                 statusFilter === 'overdue'
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
               onClick={() => setStatusFilter('overdue')}
               type="button"
@@ -193,9 +221,14 @@ export function ContractsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((row: ContractRow, i: number) => (
+                filtered.map((row: ContractRow, i: number) => {
+                  const uiStatus = listRowUiStatus(row)
+                  const rowOverdue = uiStatus === 'OVERDUE'
+                  return (
                   <tr
-                    className="group cursor-default transition-colors hover:bg-gray-50/80 dark:hover:bg-slate-950/40"
+                    className={`group cursor-default transition-colors hover:bg-gray-50/80 dark:hover:bg-slate-950/40 ${
+                      rowOverdue ? 'bg-red-50/40 dark:bg-red-950/15' : ''
+                    }`}
                     key={row.id}
                   >
                     <td className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400">
@@ -227,11 +260,12 @@ export function ContractsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <ContractStatusBadge status={row.status} />
+                      <ContractStatusBadge status={uiStatus} />
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-slate-300">{row.createdBy}</td>
                   </tr>
-                ))
+                  )
+                })
               )}
             </tbody>
           </table>

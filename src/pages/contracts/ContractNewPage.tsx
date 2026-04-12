@@ -8,6 +8,7 @@ import type { ContractCreatePayload } from '@/features/contracts/type'
 import { searchCustomers } from '@/features/customers/service/customer.service'
 import type { CustomerRow } from '@/features/customers/type'
 import { formatVnd } from '@/shared/lib/format'
+import { customersSearchQueryKey } from '@/shared/lib/query-keys'
 import { toast } from '@/shared/lib/notify'
 
 const inputClass =
@@ -98,7 +99,7 @@ export function ContractNewPage() {
   }, [customerKeyword])
 
   const customerSearchQuery = useQuery({
-    queryKey: ['customers-search', debouncedKeyword],
+    queryKey: customersSearchQueryKey(debouncedKeyword),
     queryFn: () => searchCustomers(debouncedKeyword),
     enabled: debouncedKeyword.length >= 2,
     staleTime: 30_000,

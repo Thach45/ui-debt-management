@@ -23,6 +23,8 @@ import { useContractDetailQuery } from '@/features/contracts/hooks'
 import type { ContractDetail } from '@/features/contracts/type'
 import { contractProductLabel } from '@/shared/lib/contract-loan-details'
 import { formatDate, formatVnd } from '@/shared/lib/format'
+import { isAdminRole } from '@/shared/lib/auth-role'
+import { invalidateContractPortfolio } from '@/shared/lib/query-keys'
 import { toast } from '@/shared/lib/notify'
 
 function formatPaymentDate(iso: string) {
@@ -51,7 +53,8 @@ export function ContractDetailPage() {
   const [payAmount, setPayAmount] = useState('')
   const [payNote, setPayNote] = useState('')
 
-  const details = useMemo(() => {
+  /** Không đặt tên `details` — trong .tsx dễ trùng JSX `<details>` khiến IDE/TS báo lỗi giả. */
+  const contractFinance = useMemo(() => {
     if (!c) return null
     return {
       totalDays: c.totalDays ?? 0,
@@ -60,7 +63,7 @@ export function ContractDetailPage() {
       totalExpected: toNum(c.totalExpected),
       totalPaid: toNum(c.totalPaid),
       remainingAmount: toNum(c.remainingAmount),
-      status: String(c.loanStatus ?? 'active').toLowerCase(),
+      repaymentUiStatus: String(c.loanStatus ?? 'active').toLowerCase(),
     }
   }, [c])
 
@@ -68,7 +71,7 @@ export function ContractDetailPage() {
     mutationFn: deleteContract,
     onSuccess: () => {
       toast.success('Đã xóa hợp đồng')
-      void qc.invalidateQueries({ queryKey: ['contracts'] })
+      invalidateContractPortfolio(qc, { contractId: id })
       navigate('/contracts', { replace: true })
     },
     onError: (e: unknown) => {
@@ -80,17 +83,16 @@ export function ContractDetailPage() {
     mutationFn: collectPayment,
     onSuccess: () => {
       toast.success('Đã ghi nhận thu tiền')
-      void qc.invalidateQueries({ queryKey: ['contract', id] })
-      void qc.invalidateQueries({ queryKey: ['contracts'] })
+      invalidateContractPortfolio(qc, { contractId: id })
       setPayAmount('')
       setPayNote('')
      
       setShowPaymentForm(false)
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : 'Thu tiền thất bại'),
   })
 
-  function handleShare(contract: ContractDetail, d: NonNullable<typeof details>) {
+  function handleShare(contract: ContractDetail, d: NonNullable<typeof contractFinance>) {
     const productLine = contractProductLabel(contract)
     const text = `HỢP ĐỒNG TRẢ GÓP
 Khách hàng: ${contract.customerName}
@@ -110,15 +112,15 @@ Còn lại: ${formatVnd(d.remainingAmount)}
 
   function handleAddPaymentSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!c?.id || !details) return
+    if (!c?.id || !contractFinance) return
     const raw = payAmount.replace(/\D/g, '')
     const amount = Number(raw)
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error('Nhập số tiền hợp lệ (> 0)')
       return
     }
-    if (amount > details.remainingAmount) {
-      toast.error(`Số tiền vượt mức còn phải thu (${formatVnd(details.remainingAmount)})`)
+    if (amount > contractFinance.remainingAmount) {
+      toast.error(`Số tiền vượt mức còn phải thu (${formatVnd(contractFinance.remainingAmount)})`)
       return
     }
     
@@ -138,7 +140,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
     )
   }
 
-  if (isError || !c || !details) {
+  if (isError) {
     return (
       <div className="mx-auto max-w-lg p-8 text-center">
         <p className="text-sm text-rose-600">{error instanceof Error ? error.message : 'Không tải được hợp đồng'}</p>
@@ -149,12 +151,30 @@ Còn lại: ${formatVnd(d.remainingAmount)}
     )
   }
 
+  if (!c || !contractFinance) {
+    return (
+      <div className="mx-auto max-w-lg p-8 text-center">
+        <p className="text-sm text-rose-600">Không tải được hợp đồng</p>
+        <Link className="mt-4 inline-block text-sm font-medium text-teal-600 hover:underline" to="/contracts">
+          Về danh sách hợp đồng
+        </Link>
+      </div>
+    )
+  }
+
   const productLine = contractProductLabel(c)
   const payments = c.paymentRecords ?? []
   const canPay =
-    details.remainingAmount > 0 &&
-    details.status !== 'completed' &&
+    contractFinance.remainingAmount > 0 &&
+    contractFinance.repaymentUiStatus !== 'completed' &&
     String(c.status).toUpperCase() !== 'COMPLETED'
+
+  const apiStatus = String(c.status).toUpperCase()
+  const canDeleteContract =
+    apiStatus === 'COMPLETED' ||
+    apiStatus === 'CANCELLED' ||
+    contractFinance.repaymentUiStatus === 'completed'
+  const isAdmin = isAdminRole()
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900">
@@ -173,27 +193,34 @@ Còn lại: ${formatVnd(d.remainingAmount)}
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => handleShare(c, details)}
+              onClick={() => handleShare(c, contractFinance)}
               className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             >
               {showCopied ? <CheckCircle className="size-4 text-teal-500" aria-hidden /> : <Share2 className="size-4" aria-hidden />}
               <span>{showCopied ? 'Đã copy' : 'Copy gửi Zalo'}</span>
             </button>
-            <button
-              type="button"
-              disabled={deleteMut.isPending}
-              onClick={() => {
-                if (
-                  window.confirm('Bạn có chắc chắn muốn xóa hợp đồng này? Mọi dữ liệu thu tiền sẽ bị mất.')
-                ) {
-                  deleteMut.mutate(c.id)
+            {isAdmin ? (
+              <button
+                type="button"
+                disabled={deleteMut.isPending || !canDeleteContract}
+                title={
+                  canDeleteContract
+                    ? undefined
+                    : 'Chỉ xóa được khi hợp đồng đã tất toán hoặc đã hủy (còn nợ thì không xóa).'
                 }
-              }}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:opacity-50"
-            >
-              <Trash2 className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Xóa hợp đồng</span>
-            </button>
+                onClick={() => {
+                  if (
+                    window.confirm('Bạn có chắc chắn muốn xóa hợp đồng này? Mọi dữ liệu thu tiền sẽ bị mất.')
+                  ) {
+                    deleteMut.mutate(c.id)
+                  }
+                }}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 className="size-4" aria-hidden />
+                <span className="hidden sm:inline">Xóa hợp đồng</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -210,11 +237,11 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                   <div>
                     <div className="mb-2 flex flex-wrap items-center gap-3">
                       <h1 className="text-2xl font-bold tracking-tight text-slate-900">{c.customerName}</h1>
-                      {details.status === 'overdue' ? (
+                      {contractFinance.repaymentUiStatus === 'overdue' ? (
                         <span className="flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
                           <AlertCircle className="size-3.5" aria-hidden /> Quá hạn
                         </span>
-                      ) : details.status === 'completed' ? (
+                      ) : contractFinance.repaymentUiStatus === 'completed' ? (
                         <span className="flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-semibold text-teal-700">
                           <CheckCircle className="size-3.5" aria-hidden /> Đã tất toán
                         </span>
@@ -240,7 +267,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
 
                 <div className="flex flex-col border-t border-slate-100 pt-4 sm:border-t-0 sm:pt-0">
                   <div className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-slate-500">
-                    <span>Kỳ hạn {details.totalDays} ngày</span>
+                    <span>Kỳ hạn {contractFinance.totalDays} ngày</span>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 font-semibold text-slate-900">
                     {formatDate(c.startDate)} <span className="mx-1 text-slate-400">→</span> {formatDate(c.endDate)}
@@ -266,7 +293,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Lãi suất / tháng</p>
                 <div className="flex flex-wrap items-baseline gap-2">
                   <p className="text-xl font-bold text-slate-900">{String(c.interestRate)}%</p>
-                  <p className="text-sm font-medium text-slate-500">({formatVnd(details.interestPerDay)}/ngày)</p>
+                  <p className="text-sm font-medium text-slate-500">({formatVnd(contractFinance.interestPerDay)}/ngày)</p>
                 </div>
               </div>
             </div>
@@ -322,7 +349,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
                   <CheckCircle className="size-4" aria-hidden />
-                  Đã thu tổng cộng: {formatVnd(details.totalPaid)}
+                  Đã thu tổng cộng: {formatVnd(contractFinance.totalPaid)}
                 </div>
               </div>
 
@@ -393,14 +420,14 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-slate-600">Tổng gốc & lãi:</span>
-                    <span className="text-lg font-bold tabular-nums text-slate-900">{formatVnd(details.totalExpected)}</span>
+                    <span className="text-lg font-bold tabular-nums text-slate-900">{formatVnd(contractFinance.totalExpected)}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-slate-600">Đã thanh toán:</span>
                     <div className="flex items-center gap-1.5 text-teal-600">
                       <ArrowUpRight className="size-4" aria-hidden />
-                      <span className="text-lg font-bold tabular-nums">{formatVnd(details.totalPaid)}</span>
+                      <span className="text-lg font-bold tabular-nums">{formatVnd(contractFinance.totalPaid)}</span>
                     </div>
                   </div>
 
@@ -409,16 +436,16 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                   <div>
                     <span className="mb-1 block font-medium text-slate-500">Cần thu còn lại:</span>
                     <span className="text-3xl font-black tabular-nums tracking-tight text-rose-600">
-                      {formatVnd(details.remainingAmount)}
+                      {formatVnd(contractFinance.remainingAmount)}
                     </span>
                   </div>
 
-                  {toNum(c.remainingPrincipal) <= 0 && details.remainingAmount > 0 ? (
+                  {toNum(c.remainingPrincipal) <= 0 && contractFinance.remainingAmount > 0 ? (
                     <div className="mt-3 flex gap-2 rounded-xl border border-amber-100 bg-amber-50/80 p-3 text-sm text-amber-800">
                       <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
                       <p>
                         Gốc đã về 0 nhưng vẫn còn khoản lãi/chênh lệch cần thu:{' '}
-                        <strong className="tabular-nums">{formatVnd(details.remainingAmount)}</strong>.
+                        <strong className="tabular-nums">{formatVnd(contractFinance.remainingAmount)}</strong>.
                       </p>
                     </div>
                   ) : null}

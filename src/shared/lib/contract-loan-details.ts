@@ -15,7 +15,15 @@ function parseLocalDate(iso: string): Date {
   return Number.isNaN(d.getTime()) ? new Date() : d
 }
 
-/** Giống `calculateLoanDetails` trong remix `utils/calculations.ts` — lãi %/tháng (vd. 1.5). */
+/** Làm tròn xuống tới đồng — khớp {@code RoundingMode.DOWN} scale 0 (Java). */
+function roundMoneyDown(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.trunc(n)
+}
+
+/**
+ * Giống {@code ContractLoanCalculator} backend — lãi %/tháng; tiền VND làm tròn <strong>xuống</strong> đồng nguyên.
+ */
 export function calculateLoanDetailsFromContract(contract: ContractDetail) {
   const principal = toNum(contract.principal)
   const start = parseLocalDate(contract.startDate)
@@ -29,8 +37,7 @@ export function calculateLoanDetailsFromContract(contract: ContractDetail) {
 
   const ratePct = toNum(contract.interestRate)
   const r = ratePct / 100
-  let totalInterest = 0
-  let interestPerDay = 0
+  let totalInterestRaw = 0
 
   const simple =
     contract.interestType === 'SIMPLE' ||
@@ -38,19 +45,26 @@ export function calculateLoanDetailsFromContract(contract: ContractDetail) {
     String(contract.interestType).toUpperCase() === 'SIMPLE'
 
   if (simple) {
-    interestPerDay = principal * (r / 30)
-    totalInterest = interestPerDay * totalDays
+    const interestPerDayRaw = principal * (r / 30)
+    totalInterestRaw = interestPerDayRaw * totalDays
   } else {
     const dailyRate = r / 30
-    totalInterest = principal * Math.pow(1 + dailyRate, totalDays) - principal
-    interestPerDay = totalDays > 0 ? totalInterest / totalDays : 0
+    totalInterestRaw = principal * Math.pow(1 + dailyRate, totalDays) - principal
   }
 
-  const payments = contract.paymentRecords ?? []
-  const totalPaid = payments.reduce((sum, p) => sum + toNum(p.amount), 0)
+  const totalInterest = roundMoneyDown(totalInterestRaw)
+  const totalExpectedRaw = principal + totalInterestRaw
+  const totalExpected = roundMoneyDown(totalExpectedRaw)
 
-  const totalExpected = principal + totalInterest
-  const remainingAmount = totalExpected - totalPaid
+  const payments = contract.paymentRecords ?? []
+  const totalPaidRaw = payments.reduce((sum, p) => sum + toNum(p.amount), 0)
+  const totalPaid = roundMoneyDown(totalPaidRaw)
+
+  const remainingRaw = Math.max(0, totalExpectedRaw - totalPaidRaw)
+  const remainingAmount = roundMoneyDown(remainingRaw)
+
+  const interestPerDay =
+    totalDays > 0 ? roundMoneyDown(totalInterest / totalDays) : 0
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

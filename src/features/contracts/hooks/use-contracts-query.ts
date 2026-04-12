@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { fetchContractsPage } from '@/features/contracts/service'
+import { contractsPageQueryKey } from '@/shared/lib/query-keys'
 import { toast } from '@/shared/lib/notify'
 
 export function useContractsQuery(page: number, size: number) {
   const query = useQuery({
-    queryKey: ['contracts', page, size],
+    queryKey: contractsPageQueryKey(page, size),
     queryFn: () => fetchContractsPage(page, size),
   })
 

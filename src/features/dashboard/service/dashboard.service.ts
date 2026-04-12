@@ -9,6 +9,8 @@ export type DashboardOverviewApi = {
   completedCount: number
   totalCollected: number | string
   totalRemaining: number | string
+  totalInterest?: number | string
+  totalPrincipalLent?: number | string
 }
 
 function toNum(v: number | string): number {
@@ -27,5 +29,7 @@ export async function fetchDashboardStats(): Promise<DashboardOverview> {
     completedCount: data.completedCount,
     totalCollected: toNum(data.totalCollected),
     totalRemaining: toNum(data.totalRemaining),
+    totalInterest: toNum(data.totalInterest ?? 0),
+    totalPrincipalLent: toNum(data.totalPrincipalLent ?? 0),
   }
 }
