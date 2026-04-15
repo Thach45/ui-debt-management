@@ -8,6 +8,10 @@ export type DashboardOverview = {
   completedCount: number
   totalCollected: number
   totalRemaining: number
+  /** Tổng lãi dự kiến (cộng từng HĐ) */
+  totalInterest: number
+  /** Tổng gốc thực cho vay (giá trị HĐ − trả trước) */
+  totalPrincipalLent: number
 }
 
 /**

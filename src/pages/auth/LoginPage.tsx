@@ -114,13 +114,6 @@ export function LoginPage() {
             )}
           </button>
         </form>
-
-        {import.meta.env.DEV ? (
-          <p className="mt-6 text-center text-xs text-gray-400 dark:text-slate-500">
-            Seed: <span className="font-mono">admin@example.com</span> /{' '}
-            <span className="font-mono">123456</span>
-          </p>
-        ) : null}
       </div>
 
       <p className="mt-8 text-center text-sm text-gray-500 dark:text-slate-400">

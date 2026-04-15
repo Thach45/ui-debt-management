@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react'
+import { AlertCircle, Banknote, CheckCircle, Clock, Percent, TrendingUp } from 'lucide-react'
 import {
   Bar,
   BarChart,
@@ -80,6 +80,33 @@ export function HomePage() {
             Đã tất toán
           </div>
           <div className="text-2xl font-bold tabular-nums text-emerald-700">{(stats?.completedCount ?? 0)}</div>
+        </div>
+      </div>
+
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-6 shadow-sm dark:border-amber-900/35 dark:bg-amber-950/20">
+          <div className="mb-1 flex items-center gap-1 text-sm font-medium text-amber-800 dark:text-amber-200">
+            <Percent className="size-4 shrink-0" aria-hidden />
+            Tổng tiền lãi (dự kiến)
+          </div>
+          <div className="text-2xl font-bold tabular-nums text-amber-900 dark:text-amber-100">
+            {formatVnd(stats?.totalInterest ?? 0)}
+          </div>
+          <p className="mt-2 text-xs text-amber-800/80 dark:text-amber-200/70">
+            Cộng lãi dự kiến trên toàn bộ hợp đồng (cùng cách tính như chi tiết HĐ).
+          </p>
+        </div>
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-6 shadow-sm dark:border-indigo-900/35 dark:bg-indigo-950/25">
+          <div className="mb-1 flex items-center gap-1 text-sm font-medium text-indigo-800 dark:text-indigo-200">
+            <Banknote className="size-4 shrink-0" aria-hidden />
+            Tổng đã cho mượn (gốc trả góp)
+          </div>
+          <div className="text-2xl font-bold tabular-nums text-indigo-900 dark:text-indigo-100">
+            {formatVnd(stats?.totalPrincipalLent ?? 0)}
+          </div>
+          <p className="mt-2 text-xs text-indigo-800/80 dark:text-indigo-200/70">
+            Tiền thực cho vay = giá trị hợp đồng trừ trả trước (phần khách đã tự đóng, không tính vào cho mượn).
+          </p>
         </div>
       </div>
 

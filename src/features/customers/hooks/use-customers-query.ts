@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { fetchAllCustomers } from '@/features/customers/service'
+import { QK } from '@/shared/lib/query-keys'
 import { toast } from '@/shared/lib/notify'
 
 export function useCustomersQuery() {
   const query = useQuery({
-    queryKey: ['customers'],
+    queryKey: QK.customers,
     queryFn: fetchAllCustomers,
   })
 
