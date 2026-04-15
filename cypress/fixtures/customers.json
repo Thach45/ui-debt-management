@@ -1,0 +1,26 @@
+{
+  "mockToken": "mock-token",
+  "newCustomer": {
+    "id": "cust-new-001",
+    "name": "Nguyên Văn Test",
+    "phone": "0901234567",
+    "address": "123 Đuờng Test, Hà Nội",
+    "farmingLocation": "Ruộng lúa thử nghiệm",
+    "customerTier": "VIP",
+    "totalCurrentDebt": 0,
+    "lifetimePurchaseValue": 0,
+    "createdAt": "2024-04-12T00:00:00.000Z",
+    "updatedAt": "2024-04-12T00:00:00.000Z"
+  },
+  "oldCustomer": {
+    "id": "cust-old-001",
+    "name": "Trần Thị Cũ",
+    "phone": "0912345678",
+    "address": "Xã Cũ",
+    "farmingLocation": "Ruộng cũ",
+    "customerTier": "STANDARD",
+    "totalCurrentDebt": 500000,
+    "createdAt": "2024-01-01T00:00:00",
+    "updatedAt": "2024-01-01T00:00:00"
+  }
+}
