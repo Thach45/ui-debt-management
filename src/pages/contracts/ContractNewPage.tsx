@@ -194,9 +194,7 @@ export function ContractNewPage() {
                 {customerSearchQuery.isFetching ? (
                   <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">Đang tìm…</p>
                 ) : null}
-                {debouncedKeyword.length >= 2 && !customerSearchQuery.isFetching && searchRows.length === 0 ? (
-                  <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">Không tìm thấy khách phù hợp.</p>
-                ) : null}
+               
                 {searchRows.length > 0 ? (
                   <div className="mt-3">
                     <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300" htmlFor="customer-select">
