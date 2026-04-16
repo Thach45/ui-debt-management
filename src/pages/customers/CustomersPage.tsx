@@ -8,13 +8,10 @@ import {
   useDeleteCustomerMutation,
 } from '@/features/customers/hooks'
 import type { CustomerRow } from '@/features/customers/type'
-import { formatVnd } from '@/shared/lib/format'
+
 import { isAdminRole } from '@/shared/lib/auth-role'
 
-function toNum(v: string | number | null | undefined) {
-  if (v === null || v === undefined) return 0
-  return typeof v === 'number' ? v : Number(v) || 0
-}
+
 
 export function CustomersPage() {
   const [q, setQ] = useState('')
@@ -68,12 +65,7 @@ export function CustomersPage() {
           <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Đang hiển thị (lọc)</div>
           <div className="text-xl font-bold tabular-nums text-emerald-600">{filtered.length}</div>
         </div>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="mb-1 text-sm font-medium text-gray-500 dark:text-slate-400">Tổng dư nợ (danh sách)</div>
-          <div className="text-xl font-bold tabular-nums text-orange-600">
-            {formatVnd(rows.reduce((s, r) => s + toNum(r.totalCurrentDebt), 0))}
-          </div>
-        </div>
+       
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
@@ -111,7 +103,7 @@ export function CustomersPage() {
                 <th className="px-4 py-3">Số điện thoại</th>
                 <th className="px-4 py-3">Địa chỉ</th>
                 <th className="px-4 py-3">Hạng</th>
-                <th className="px-4 py-3 text-right">Dư nợ</th>
+                
                 <th className="px-4 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -157,9 +149,7 @@ export function CustomersPage() {
                     <td className="px-4 py-3">
                       <CustomerTierBadge tier={row.customerTier} />
                     </td>
-                    <td className="px-4 py-3 text-right text-base font-medium tabular-nums text-gray-900 dark:text-slate-100">
-                      {formatVnd(row.totalCurrentDebt)}
-                    </td>
+                   
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-1">
                         <Link

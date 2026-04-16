@@ -1,4 +1,4 @@
-import { Bot, ImageUp, Moon, Sun } from 'lucide-react'
+import {  Moon, Sun } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 
@@ -51,17 +51,7 @@ export function RootLayout() {
           >
             {resolvedIsDark ? <Sun className="size-6" strokeWidth={1.75} aria-hidden /> : <Moon className="size-6" strokeWidth={1.75} aria-hidden />}
           </button>
-          <button className={fabBtnClass} title="Trợ lý AI" type="button" aria-label="Mở trợ lý AI">
-            <Bot className="size-6" strokeWidth={1.75} aria-hidden />
-          </button>
-          <button
-            className={fabBtnClass}
-            title="Tải ảnh bill chuyển khoản"
-            type="button"
-            aria-label="Tải ảnh bill chuyển khoản"
-          >
-            <ImageUp className="size-6" strokeWidth={1.75} aria-hidden />
-          </button>
+          
         </div>
       </div>
     </div>

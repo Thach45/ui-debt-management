@@ -261,7 +261,7 @@ export function UserAccountsPage() {
                     <th className="px-4 py-3">SĐT</th>
                     <th className="px-4 py-3">Vai trò</th>
                     <th className="px-4 py-3">Trạng thái</th>
-                    <th className="px-4 py-3">Đăng nhập cuối</th>
+                   
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
@@ -312,7 +312,7 @@ export function UserAccountsPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 tabular-nums text-gray-600 dark:text-slate-400">—</td>
+                        
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1">
                             <button

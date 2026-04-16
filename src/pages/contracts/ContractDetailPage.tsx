@@ -536,7 +536,7 @@ Còn lại: ${formatVnd(d.remainingAmount)}
                         </>
                       )}
                     </button>
-                    <p className="text-center text-[11px] text-slate-400">POST /api/v1/payments/collect</p>
+                   
                   </form>
                 </div>
               ) : null}
